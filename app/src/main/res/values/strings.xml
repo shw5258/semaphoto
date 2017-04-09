@@ -17,4 +17,6 @@
     <string name="need_a_new_account">Need a new Account</string>
     <string name="username">username</string>
     <string name="remove_post">Remove post</string>
+    <string name="action_edit">edit</string>
+    <string name="action_done">done</string>
 </resources>

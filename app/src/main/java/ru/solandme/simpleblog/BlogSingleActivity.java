@@ -2,6 +2,8 @@ package ru.solandme.simpleblog;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,6 +27,9 @@ public class BlogSingleActivity extends AppCompatActivity {
     private EditText singleTitleField;
     private EditText singleDescField;
     private Button singleRemoveButton;
+    private MenuItem mEdit, mDone;
+    private String mPostId;
+    private boolean mAfterEdit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +52,7 @@ public class BlogSingleActivity extends AppCompatActivity {
                 String imageURL = (String) dataSnapshot.child("imageURL").getValue();
                 String postTitle = (String) dataSnapshot.child("title").getValue();
                 String postDesc = (String) dataSnapshot.child("description").getValue();
-                String postUid = (String) dataSnapshot.child("uid").getValue();
+                mPostId = (String) dataSnapshot.child("uid").getValue();
 
                 singleTitleField.setText(postTitle);
                 singleTitleField.setEnabled(false);
@@ -59,14 +64,9 @@ public class BlogSingleActivity extends AppCompatActivity {
 //                int width = singleImageSelect.getMeasuredWidth();
 //                int height = singleImageSelect.getMeasuredHeight();
 //                Picasso.with(BlogSingleActivity.this).load(imageURL).resize(width, height).centerInside().into(singleImageSelect);
-                Glide.with(BlogSingleActivity.this).load(imageURL).into(singleImageSelect);
-
-//                if (auth.getCurrentUser().getUid().equals(postUid)) {
-//                    singleImageSelect.setClickable(true);
-//                    singleTitleField.setEnabled(true);
-//                    singleDescField.setEnabled(true);
-//                    singleRemoveButton.setVisibility(View.VISIBLE);
-//                }
+                if (!mAfterEdit) {
+                    Glide.with(BlogSingleActivity.this).load(imageURL).into(singleImageSelect);
+                }
             }
 
             @Override
@@ -86,5 +86,46 @@ public class BlogSingleActivity extends AppCompatActivity {
         });
     }
     
+    public void editPost(){
+        singleImageSelect.setClickable(true);
+        singleTitleField.setEnabled(true);
+        singleDescField.setEnabled(true);
+    }
     
+    public void postPost(){
+        mAfterEdit = true;
+        databaseRef.child(postKey).child("title").setValue(singleTitleField.getText().toString());
+        databaseRef.child(postKey).child("description").setValue(singleDescField.getText().toString());
+        singleImageSelect.setClickable(false);
+        singleTitleField.setEnabled(false);
+        singleDescField.setEnabled(false);
+    }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.detail_menu, menu);
+        mEdit = menu.findItem(R.id.action_edit);
+        mDone = menu.findItem(R.id.action_done);
+        if (auth.getCurrentUser().getUid().equals(mPostId)) {
+            mEdit.setVisible(true);
+        }
+        return super.onCreateOptionsMenu(menu);
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_edit:
+                editPost();
+                mEdit.setVisible(false);
+                mDone.setVisible(true);
+                return true;
+            case R.id.action_done:
+                postPost();
+                mEdit.setVisible(true);
+                mDone.setVisible(false);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

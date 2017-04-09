@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
@@ -78,12 +79,12 @@ public class MainActivity extends AppCompatActivity {
 
         blogList = (RecyclerView) findViewById(R.id.blogList);
 
-//        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-//        layoutManager.setReverseLayout(true);
-//        layoutManager.setStackFromEnd(true);
-        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setReverseLayout(true);
-        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
+        layoutManager.setStackFromEnd(true);
+//        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
+//        layoutManager.setReverseLayout(true);
+//        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
         blogList.setHasFixedSize(true);
         blogList.setLayoutManager(layoutManager);
     }
@@ -206,8 +207,16 @@ public class MainActivity extends AppCompatActivity {
             postImage.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
             int width = postImage.getMeasuredWidth();
             int height = postImage.getMeasuredHeight();
-            Picasso.with(context).load(imageUrl).resize(width, height).centerInside().into(postImage);
-//            Glide.with(context).load(imageUrl).into(postImage);
+            Picasso.with(context)
+                    .load(imageUrl)
+                    .placeholder(R.mipmap.add_btn)
+                    .resize(width, height)
+                    .centerInside()
+                    .into(postImage);
+//            Glide.with(context)
+//                    .load(imageUrl)
+//                    .placeholder(R.mipmap.add_btn)
+//                    .into(postImage);
             Log.d(MainActivity.class.getCanonicalName(), "postImageView Width: " + postImage.getWidth());
         }
         //datachange
