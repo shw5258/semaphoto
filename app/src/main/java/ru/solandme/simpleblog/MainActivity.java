@@ -31,6 +31,7 @@ import com.squareup.picasso.Picasso;
 public class MainActivity extends AppCompatActivity {
     
     public static final String POST_KEY = "postKey";
+    private static final String SAVED_LAYOUT_MANAGER = "saved_layout_manager";
     private RecyclerView blogList;
     private DatabaseReference databaseRef;
     private DatabaseReference databaseRefUsers;
@@ -40,7 +41,8 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener authStateListener;
     private Query queryCurrentUser;
     private String user_id;
-
+    private LinearLayoutManager mLayoutManager;
+    
     private Boolean processLike;
 
 
@@ -79,38 +81,35 @@ public class MainActivity extends AppCompatActivity {
 
         blogList = (RecyclerView) findViewById(R.id.blogList);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setReverseLayout(true);
-        layoutManager.setStackFromEnd(true);
+        mLayoutManager = new LinearLayoutManager(this);
+        mLayoutManager.setReverseLayout(true);
+        mLayoutManager.setStackFromEnd(true);
 //        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
 //        layoutManager.setReverseLayout(true);
 //        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
         blogList.setHasFixedSize(true);
-        blogList.setLayoutManager(layoutManager);
+        blogList.setLayoutManager(mLayoutManager);
     }
-
+    
     @Override
     protected void onStart() {
         super.onStart();
         auth.addAuthStateListener(authStateListener);
         checkUserExist();
-        FirebaseRecyclerAdapter<Blog, BlogViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Blog, BlogViewHolder>(
-                        Blog.class,
-                        R.layout.blog_row,
-                        BlogViewHolder.class,
-//                        queryCurrentUser
-                        databaseRef
-                ) {
+        FirebaseRecyclerAdapter<Blog, BlogViewHolder> firebaseRecyclerAdapter =
+                new FirebaseRecyclerAdapter<Blog, BlogViewHolder>(Blog.class, R.layout.blog_row,
+                        BlogViewHolder.class, databaseRef) {
+                    
                     @Override
                     protected void populateViewHolder(BlogViewHolder viewHolder, Blog model, int position) {
 
                         final String postKey = getRef(position).getKey();
 
                         viewHolder.setTitle(model.getTitle());
-//                        viewHolder.setDesc(model.getDescription());
                         viewHolder.setImage(getApplicationContext(), model.getImageURL());
                         viewHolder.setUsername(model.getUsername());
                         viewHolder.setLikeBtn(postKey);
+                        
                         viewHolder.view.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -197,11 +196,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-//        void setDesc(String desc) {
-//            TextView postDescription = (TextView) view.findViewById(R.id.postDesc);
-//            postDescription.setText(desc);
-//        }
-
         void setImage(Context context, String imageUrl) {
             ImageView postImage = (ImageView) view.findViewById(R.id.postImage);
             postImage.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
@@ -217,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
 //                    .load(imageUrl)
 //                    .placeholder(R.mipmap.add_btn)
 //                    .into(postImage);
-            Log.d(MainActivity.class.getCanonicalName(), "postImageView Width: " + postImage.getWidth());
+            Log.d(MainActivity.class.getCanonicalName(), "postImageView Width: " + width + " Height: " + height);
         }
         //datachange
 

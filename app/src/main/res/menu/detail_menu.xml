@@ -15,4 +15,17 @@
         app:showAsAction="ifRoom"
         android:visible="false"/>
 
+    <item
+        android:id="@+id/action_remove"
+        android:title="@string/action_remove"
+        app:showAsAction="ifRoom"
+        android:visible="false"/>
+
+    <item
+        android:id="@+id/action_map"
+        android:icon="@drawable/ic_action_map"
+        android:title="@string/action_map"
+        app:showAsAction="always"
+        android:visible="false"/>
+
 </menu>

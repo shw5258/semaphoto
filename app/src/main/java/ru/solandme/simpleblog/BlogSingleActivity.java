@@ -1,5 +1,7 @@
 package ru.solandme.simpleblog;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -27,7 +29,7 @@ public class BlogSingleActivity extends AppCompatActivity {
     private EditText singleTitleField;
     private EditText singleDescField;
     private Button singleRemoveButton;
-    private MenuItem mEdit, mDone;
+    private MenuItem mEdit, mDone, mRemove, mMap;
     private String mPostId;
     private boolean mAfterEdit;
 
@@ -73,17 +75,11 @@ public class BlogSingleActivity extends AppCompatActivity {
             public void onCancelled(DatabaseError databaseError) {
             }
         });
-        
-        
 
-        singleRemoveButton.setOnClickListener(new View.OnClickListener() {
-            
-            @Override
-            public void onClick(View v) {
-                databaseRef.child(postKey).removeValue();
-                finish();
-            }
-        });
+    }
+    public void removePost(){
+        databaseRef.child(postKey).removeValue();
+        finish();
     }
     
     public void editPost(){
@@ -101,13 +97,25 @@ public class BlogSingleActivity extends AppCompatActivity {
         singleDescField.setEnabled(false);
     }
     
+    public void showMap(Uri geoLocation) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(geoLocation);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
+    }
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.detail_menu, menu);
         mEdit = menu.findItem(R.id.action_edit);
         mDone = menu.findItem(R.id.action_done);
+        mRemove = menu.findItem(R.id.action_remove);
+        mMap = menu.findItem(R.id.action_map);
         if (auth.getCurrentUser().getUid().equals(mPostId)) {
             mEdit.setVisible(true);
+            mRemove.setVisible(true);
+            mMap.setVisible(true);
         }
         return super.onCreateOptionsMenu(menu);
     }
@@ -124,6 +132,12 @@ public class BlogSingleActivity extends AppCompatActivity {
                 postPost();
                 mEdit.setVisible(true);
                 mDone.setVisible(false);
+                return true;
+            case R.id.action_remove:
+                removePost();
+                return true;
+            case R.id.action_map:
+                showMap(Uri.parse("geo:0,0?q=37.792180,-122.412179(Treasure)"));
                 return true;
         }
         return super.onOptionsItemSelected(item);
