@@ -7,11 +7,20 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlacePicker;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -32,7 +41,9 @@ public class PostActivity extends AppCompatActivity {
     private ImageButton selectImage;
     private EditText postTitle;
     private EditText postDesc;
-    private Button submitBtn;
+    private TextView locationName;
+    private double latitude;
+    private double longitude;
     private Uri imageUri = null;
 
     private StorageReference storage;
@@ -46,6 +57,7 @@ public class PostActivity extends AppCompatActivity {
     private ProgressDialog progress;
 
     private static final int GALLERY_REQUEST = 1;
+    public static final int PLACE_PICKER_REQUEST = 2;
     
     
     @Override
@@ -68,7 +80,7 @@ public class PostActivity extends AppCompatActivity {
         
         postTitle = (EditText) findViewById(R.id.titleField);
         postDesc = (EditText) findViewById(R.id.descField);
-        submitBtn = (Button) findViewById(R.id.submitButton);
+        locationName = (TextView) findViewById(R.id.locationName);
 
         progress = new ProgressDialog(this);
 
@@ -81,12 +93,23 @@ public class PostActivity extends AppCompatActivity {
             }
         });
 
-        submitBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startPosting();
-            }
-        });
+    }
+    
+    public boolean onCreateOptionsMenu(Menu menu) {
+        
+        getMenuInflater().inflate(R.menu.post_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        
+        if (item.getItemId() == R.id.action_post) {
+    
+            startPosting();
+        }
+        
+        return super.onOptionsItemSelected(item);
     }
 
     private void startPosting() {
@@ -113,6 +136,10 @@ public class PostActivity extends AppCompatActivity {
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             newPostRef.child("title").setValue(title_val);
                             newPostRef.child("description").setValue(desc_val);
+                            if (latitude != 0 && longitude != 0) {
+                                newPostRef.child("latitude").setValue(latitude);
+                                newPostRef.child("longitude").setValue(longitude);
+                            }
                             newPostRef.child("imageURL").setValue(downloadUrl.toString());
                             newPostRef.child("uid").setValue(currentUser.getUid());
                             newPostRef.child("username").setValue(dataSnapshot.child("name")
@@ -120,7 +147,7 @@ public class PostActivity extends AppCompatActivity {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     if (task.isSuccessful()) {
-                                        startActivity(new Intent(PostActivity.this, MainActivity.class));
+                                        finish();
                                     }
                                 }
                             });
@@ -136,6 +163,15 @@ public class PostActivity extends AppCompatActivity {
             });
         }
     }
+    
+    public void getLocation(View view) {
+        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+        try {
+            startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
+        } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -144,6 +180,18 @@ public class PostActivity extends AppCompatActivity {
         if (requestCode == GALLERY_REQUEST && resultCode == RESULT_OK) {
             imageUri = data.getData();
             Picasso.with(getBaseContext()).load(imageUri).resize(mWidth, mHeight).centerInside().into(selectImage);
+        }
+    
+        if (requestCode == PLACE_PICKER_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                Place place = PlacePicker.getPlace(data, this);
+                locationName.setText(place.getName());
+                LatLng latLng = place.getLatLng();
+                latitude = latLng.latitude;
+                longitude = latLng.longitude;
+                String toastMsg = String.format("Place: %s", place.getName());
+                Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
+            }
         }
     }
 }

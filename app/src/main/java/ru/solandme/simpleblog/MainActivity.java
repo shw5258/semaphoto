@@ -31,7 +31,6 @@ import com.squareup.picasso.Picasso;
 public class MainActivity extends AppCompatActivity {
     
     public static final String POST_KEY = "postKey";
-    private static final String SAVED_LAYOUT_MANAGER = "saved_layout_manager";
     private RecyclerView blogList;
     private DatabaseReference databaseRef;
     private DatabaseReference databaseRefUsers;
@@ -42,14 +41,12 @@ public class MainActivity extends AppCompatActivity {
     private Query queryCurrentUser;
     private String user_id;
     private LinearLayoutManager mLayoutManager;
-    
     private Boolean processLike;
-
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+//        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         auth = FirebaseAuth.getInstance();
         authStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -75,9 +72,9 @@ public class MainActivity extends AppCompatActivity {
             queryCurrentUser = databaseRefCurrentUser.orderByChild("uid").equalTo(currentUserId);
         }
     
-        databaseRef.keepSynced(true);
-        databaseRefUsers.keepSynced(true);
-        databaseRefLike.keepSynced(true);
+//        databaseRef.keepSynced(true);
+//        databaseRefUsers.keepSynced(true);
+//        databaseRefLike.keepSynced(true);
 
         blogList = (RecyclerView) findViewById(R.id.blogList);
 
@@ -87,29 +84,24 @@ public class MainActivity extends AppCompatActivity {
 //        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
 //        layoutManager.setReverseLayout(true);
 //        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
-        blogList.setHasFixedSize(true);
+//        blogList.setHasFixedSize(true);
         blogList.setLayoutManager(mLayoutManager);
-    }
-    
-    @Override
-    protected void onStart() {
-        super.onStart();
+        
         auth.addAuthStateListener(authStateListener);
         checkUserExist();
         FirebaseRecyclerAdapter<Blog, BlogViewHolder> firebaseRecyclerAdapter =
                 new FirebaseRecyclerAdapter<Blog, BlogViewHolder>(Blog.class, R.layout.blog_row,
                         BlogViewHolder.class, databaseRef) {
-                    
+                
                     @Override
                     protected void populateViewHolder(BlogViewHolder viewHolder, Blog model, int position) {
-
+                    
                         final String postKey = getRef(position).getKey();
-
+                    
                         viewHolder.setTitle(model.getTitle());
-                        viewHolder.setImage(getApplicationContext(), model.getImageURL());
+                        viewHolder.setImage(viewHolder.view.getContext(), model.getImageURL());
                         viewHolder.setUsername(model.getUsername());
                         viewHolder.setLikeBtn(postKey);
-                        
                         viewHolder.view.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -118,7 +110,6 @@ public class MainActivity extends AppCompatActivity {
                                 startActivity(singleBlogIntent);
                             }
                         });
-
                         viewHolder.likeBtn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -126,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                                 databaseRefLike.addValueEventListener(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
-
+                                    
                                         if (processLike) {
                                             if (dataSnapshot.child(postKey).hasChild(auth.getCurrentUser().getUid())) {
                                                 databaseRefLike.child(postKey).child(auth.getCurrentUser().getUid()).removeValue();
@@ -137,11 +128,9 @@ public class MainActivity extends AppCompatActivity {
                                             }
                                         }
                                     }
-
+                                
                                     @Override
-                                    public void onCancelled(DatabaseError databaseError) {
-
-                                    }
+                                    public void onCancelled(DatabaseError databaseError) {}
                                 });
                             }
                         });
@@ -149,12 +138,30 @@ public class MainActivity extends AppCompatActivity {
                 };
         blogList.setAdapter(firebaseRecyclerAdapter);
     }
-    
+
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
         auth.removeAuthStateListener(authStateListener);
     }
+    
+    //    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        positionIndex= mLayoutManager.findFirstVisibleItemPosition();
+//        View startView = blogList.getChildAt(0);
+//        topView = (startView == null) ? 0 : (startView.getTop() - blogList.getPaddingTop());
+//        Log.d("MainActivity", "onPause called: " + positionIndex + " topview:" + topView);
+//    }
+//
+//    @Override
+//    protected void onResume() {
+//        Log.d("MainActivity", "onResume called: " + positionIndex + " topview:" + topView);
+//        super.onResume();
+//        if (positionIndex!= -1) {
+//        mLayoutManager.scrollToPositionWithOffset(4, 0);
+//        }
+//    }
     
     public static class BlogViewHolder extends RecyclerView.ViewHolder {
 
@@ -198,20 +205,20 @@ public class MainActivity extends AppCompatActivity {
 
         void setImage(Context context, String imageUrl) {
             ImageView postImage = (ImageView) view.findViewById(R.id.postImage);
-            postImage.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-            int width = postImage.getMeasuredWidth();
-            int height = postImage.getMeasuredHeight();
-            Picasso.with(context)
-                    .load(imageUrl)
-                    .placeholder(R.mipmap.add_btn)
-                    .resize(width, height)
-                    .centerInside()
-                    .into(postImage);
-//            Glide.with(context)
+//            postImage.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+//            int width = postImage.getMeasuredWidth();
+//            int height = postImage.getMeasuredHeight();
+//            Picasso.with(context)
 //                    .load(imageUrl)
 //                    .placeholder(R.mipmap.add_btn)
+//                    .resize(width, height)
+//                    .centerInside()
 //                    .into(postImage);
-            Log.d(MainActivity.class.getCanonicalName(), "postImageView Width: " + width + " Height: " + height);
+            Glide.with(context)
+                    .load(imageUrl)
+                    .placeholder(R.mipmap.add_btn)
+                    .into(postImage);
+//            Log.d(MainActivity.class.getCanonicalName(), "postImageView Width: " + width + " Height: " + height);
         }
         //datachange
 

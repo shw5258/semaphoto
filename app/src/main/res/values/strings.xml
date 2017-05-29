@@ -21,4 +21,10 @@
     <string name="action_done">done</string>
     <string name="action_map">Map</string>
     <string name="action_remove">Remove</string>
+    <string name="action_submit">Submit</string>
+    <string name="action_post">Post</string>
+    <string name="add_location">Add Location</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

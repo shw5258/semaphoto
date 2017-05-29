@@ -4,9 +4,9 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -18,7 +18,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.squareup.picasso.Picasso;
 
 public class BlogSingleActivity extends AppCompatActivity {
 
@@ -31,7 +30,11 @@ public class BlogSingleActivity extends AppCompatActivity {
     private Button singleRemoveButton;
     private MenuItem mEdit, mDone, mRemove, mMap;
     private String mPostId;
+    private double mLatitude;
+    private double mLongitude;
     private boolean mAfterEdit;
+    public static final String TAG = BlogSingleActivity.class.getSimpleName();
+    private DetailValueEventListener listener = new DetailValueEventListener();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,37 +50,11 @@ public class BlogSingleActivity extends AppCompatActivity {
         singleDescField = (EditText) findViewById(R.id.singleDescField);
         singleRemoveButton = (Button) findViewById(R.id.singleRemoveButton);
 
-        databaseRef.child(postKey).addValueEventListener(new ValueEventListener() {
-            
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String imageURL = (String) dataSnapshot.child("imageURL").getValue();
-                String postTitle = (String) dataSnapshot.child("title").getValue();
-                String postDesc = (String) dataSnapshot.child("description").getValue();
-                mPostId = (String) dataSnapshot.child("uid").getValue();
-
-                singleTitleField.setText(postTitle);
-                singleTitleField.setEnabled(false);
-                singleDescField.setText(postDesc);
-                singleDescField.setEnabled(false);
-                singleImageSelect.setClickable(false);
-    
-//                singleImageSelect.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-//                int width = singleImageSelect.getMeasuredWidth();
-//                int height = singleImageSelect.getMeasuredHeight();
-//                Picasso.with(BlogSingleActivity.this).load(imageURL).resize(width, height).centerInside().into(singleImageSelect);
-                if (!mAfterEdit) {
-                    Glide.with(BlogSingleActivity.this).load(imageURL).into(singleImageSelect);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
+        databaseRef.child(postKey).addValueEventListener(listener);
 
     }
     public void removePost(){
+        databaseRef.child(postKey).removeEventListener(listener);
         databaseRef.child(postKey).removeValue();
         finish();
     }
@@ -107,6 +84,7 @@ public class BlogSingleActivity extends AppCompatActivity {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d(TAG, "on create options menu");
         getMenuInflater().inflate(R.menu.detail_menu, menu);
         mEdit = menu.findItem(R.id.action_edit);
         mDone = menu.findItem(R.id.action_done);
@@ -115,8 +93,12 @@ public class BlogSingleActivity extends AppCompatActivity {
         if (auth.getCurrentUser().getUid().equals(mPostId)) {
             mEdit.setVisible(true);
             mRemove.setVisible(true);
+        }
+        if (mLatitude != 0) {
             mMap.setVisible(true);
         }
+        
+        
         return super.onCreateOptionsMenu(menu);
     }
     
@@ -137,9 +119,44 @@ public class BlogSingleActivity extends AppCompatActivity {
                 removePost();
                 return true;
             case R.id.action_map:
-                showMap(Uri.parse("geo:0,0?q=37.792180,-122.412179(Treasure)"));
+                showMap(Uri.parse("geo:0,0?q=" + mLatitude + "," + mLongitude + "(Treasure)"));
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+    
+    private class DetailValueEventListener implements ValueEventListener {
+    
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            Log.d(TAG, "on data change");
+            String imageURL = (String) dataSnapshot.child("imageURL").getValue();
+            String postTitle = (String) dataSnapshot.child("title").getValue();
+            String postDesc = (String) dataSnapshot.child("description").getValue();
+            if (dataSnapshot.child("latitude").getValue() != null) {
+                mLatitude = (Double) dataSnapshot.child("latitude").getValue();
+                mLongitude = (Double) dataSnapshot.child("longitude").getValue();
+            }
+            mPostId = (String) dataSnapshot.child("uid").getValue();
+    
+            singleTitleField.setText(postTitle);
+            singleTitleField.setEnabled(false);
+            singleDescField.setText(postDesc);
+            singleDescField.setEnabled(false);
+            singleImageSelect.setClickable(false);
+
+//                singleImageSelect.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+//                int width = singleImageSelect.getMeasuredWidth();
+//                int height = singleImageSelect.getMeasuredHeight();
+//                Picasso.with(BlogSingleActivity.this).load(imageURL).resize(width, height).centerInside().into(singleImageSelect);
+            if (!mAfterEdit) {
+                Glide.with(BlogSingleActivity.this).load(imageURL).into(singleImageSelect);
+            }
+        }
+    
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+        
+        }
     }
 }

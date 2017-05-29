@@ -3,6 +3,7 @@
     package="ru.solandme.simpleblog">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <application
         android:allowBackup="true"
@@ -27,6 +28,10 @@
             android:theme="@style/Base.Theme.AppCompat" />
         <activity android:name=".BlogSingleActivity"
                   android:windowSoftInputMode="stateHidden"/>
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBOS39FoQLb1cL3SIOApEdD3Mt3fonzgn8"/>
     </application>
 
 </manifest>
