@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -18,6 +19,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.squareup.picasso.Picasso;
 
 public class BlogSingleActivity extends AppCompatActivity {
 
@@ -145,12 +147,12 @@ public class BlogSingleActivity extends AppCompatActivity {
             singleDescField.setEnabled(false);
             singleImageSelect.setClickable(false);
 
-//                singleImageSelect.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-//                int width = singleImageSelect.getMeasuredWidth();
-//                int height = singleImageSelect.getMeasuredHeight();
-//                Picasso.with(BlogSingleActivity.this).load(imageURL).resize(width, height).centerInside().into(singleImageSelect);
             if (!mAfterEdit) {
-                Glide.with(BlogSingleActivity.this).load(imageURL).into(singleImageSelect);
+                singleImageSelect.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                int width = singleImageSelect.getMeasuredWidth();
+                int height = singleImageSelect.getMeasuredHeight();
+                Picasso.with(BlogSingleActivity.this).load(imageURL).into(singleImageSelect);
+//                Glide.with(BlogSingleActivity.this).load(imageURL).into(singleImageSelect);
             }
         }
     

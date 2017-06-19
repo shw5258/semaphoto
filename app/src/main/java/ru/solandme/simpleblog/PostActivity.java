@@ -2,8 +2,11 @@ package ru.solandme.simpleblog;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -16,6 +19,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
@@ -35,6 +39,10 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class PostActivity extends AppCompatActivity {
 
@@ -123,44 +131,65 @@ public class PostActivity extends AppCompatActivity {
             progress.show();
 
             StorageReference filePath = storage.child("Blog_Images").child(imageUri.getLastPathSegment());
-
-            filePath.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    final Uri downloadUrl = taskSnapshot.getDownloadUrl();
-
-                    final DatabaseReference newPostRef = databaseReference.push();
-
-                    databaseRefUser.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            newPostRef.child("title").setValue(title_val);
-                            newPostRef.child("description").setValue(desc_val);
-                            if (latitude != 0 && longitude != 0) {
-                                newPostRef.child("latitude").setValue(latitude);
-                                newPostRef.child("longitude").setValue(longitude);
-                            }
-                            newPostRef.child("imageURL").setValue(downloadUrl.toString());
-                            newPostRef.child("uid").setValue(currentUser.getUid());
-                            newPostRef.child("username").setValue(dataSnapshot.child("name")
-                                    .getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        finish();
-                                    }
+    
+            Bitmap scaledBM;
+            ByteArrayInputStream bs;
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),imageUri);
+                int width = bitmap.getWidth();
+                int height = bitmap.getHeight();
+                View view = findViewById(R.id.imageSelect);
+                int frameWidth = view.getWidth();
+                int expectedHeight = (height * frameWidth) / width;
+                scaledBM = Bitmap.createScaledBitmap(bitmap, frameWidth, expectedHeight, true);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                scaledBM.compress(Bitmap.CompressFormat.JPEG, 50 /*ignored for PNG*/, bos);
+                byte[] bitmapdata = bos.toByteArray();
+                bs = new ByteArrayInputStream(bitmapdata);//이렇게 비트맵으로 다운스케일을 해서 용량을 줄임으로
+                //업로드 다운로드 속도가 개선되었다.
+    
+                filePath.putStream(bs).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        final Uri downloadUrl = taskSnapshot.getDownloadUrl();
+            
+                        final DatabaseReference newPostRef = databaseReference.push();
+            
+                        databaseRefUser.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                newPostRef.child("title").setValue(title_val);
+                                newPostRef.child("description").setValue(desc_val);
+                                if (latitude != 0 && longitude != 0) {
+                                    newPostRef.child("latitude").setValue(latitude);
+                                    newPostRef.child("longitude").setValue(longitude);
                                 }
-                            });
-                        }
+                                newPostRef.child("imageURL").setValue(downloadUrl.toString());
+                                newPostRef.child("uid").setValue(currentUser.getUid());
+                                newPostRef.child("username").setValue(dataSnapshot.child("name")
+                                        .getValue()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        if (task.isSuccessful()) {
+                                            startActivity(new Intent(PostActivity.this, MainActivity.class));
+                                            finish();
+                                        }
+                                    }
+                                });
+                            }
+                
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                    
+                            }
+                        });
+                        progress.dismiss();
+                    }
+                });
+            } catch(IOException e) {
+                System.out.println(e);
+            }
 
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
-                    progress.dismiss();
-                }
-            });
         }
     }
     
@@ -174,13 +203,13 @@ public class PostActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == GALLERY_REQUEST && resultCode == RESULT_OK) {
-            imageUri = data.getData();
-            Picasso.with(getBaseContext()).load(imageUri).resize(mWidth, mHeight).centerInside().into(selectImage);
-        }
+        protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
+        
+            if (requestCode == GALLERY_REQUEST && resultCode == RESULT_OK) {
+                imageUri = data.getData();
+                Picasso.with(getBaseContext()).load(imageUri).resize(mWidth, mHeight).centerInside().into(selectImage);
+            }
     
         if (requestCode == PLACE_PICKER_REQUEST) {
             if (resultCode == RESULT_OK) {
@@ -189,8 +218,6 @@ public class PostActivity extends AppCompatActivity {
                 LatLng latLng = place.getLatLng();
                 latitude = latLng.latitude;
                 longitude = latLng.longitude;
-                String toastMsg = String.format("Place: %s", place.getName());
-                Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
             }
         }
     }

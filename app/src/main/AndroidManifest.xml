@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
     package="ru.solandme.simpleblog">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -18,16 +19,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".PostActivity"
-                  android:windowSoftInputMode="stateHidden"/>
+        <activity
+            android:name=".PostActivity"
+            android:windowSoftInputMode="stateHidden"/>
         <activity android:name=".RegisterActivity" />
         <activity android:name=".LoginActivity" />
         <activity android:name=".SetupActivity" />
         <activity
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/Base.Theme.AppCompat" />
-        <activity android:name=".BlogSingleActivity"
-                  android:windowSoftInputMode="stateHidden"/>
+        <activity
+            android:name=".BlogSingleActivity"
+            android:windowSoftInputMode="stateHidden"/>
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

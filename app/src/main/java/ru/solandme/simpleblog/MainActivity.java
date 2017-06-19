@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         auth = FirebaseAuth.getInstance();
         authStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -72,9 +72,9 @@ public class MainActivity extends AppCompatActivity {
             queryCurrentUser = databaseRefCurrentUser.orderByChild("uid").equalTo(currentUserId);
         }
     
-//        databaseRef.keepSynced(true);
-//        databaseRefUsers.keepSynced(true);
-//        databaseRefLike.keepSynced(true);
+        databaseRef.keepSynced(true);
+        databaseRefUsers.keepSynced(true);
+        databaseRefLike.keepSynced(true);
 
         blogList = (RecyclerView) findViewById(R.id.blogList);
 
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
                 };
         blogList.setAdapter(firebaseRecyclerAdapter);
     }
-
+    
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -216,7 +216,8 @@ public class MainActivity extends AppCompatActivity {
 //                    .into(postImage);
             Glide.with(context)
                     .load(imageUrl)
-                    .placeholder(R.mipmap.add_btn)
+                    .placeholder(R.drawable.food_plate)
+                    .centerCrop()
                     .into(postImage);
 //            Log.d(MainActivity.class.getCanonicalName(), "postImageView Width: " + width + " Height: " + height);
         }
@@ -258,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
         databaseRefUsers.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot != null && dataSnapshot.hasChild(user_id)
+                if (null != dataSnapshot && dataSnapshot.hasChild(user_id)
                         && (!dataSnapshot.child(user_id).hasChild("name") || !dataSnapshot.child(user_id).hasChild("image"))) {
                     Intent setupIntent = new Intent(MainActivity.this, SetupActivity.class);
                     setupIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

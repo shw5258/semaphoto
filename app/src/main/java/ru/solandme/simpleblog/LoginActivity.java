@@ -39,27 +39,21 @@ public class LoginActivity extends AppCompatActivity {
     private Button loginBtn;
     private Button registerBtn;
     private SignInButton googleBtn;
-
     private FirebaseAuth auth;
     private DatabaseReference databaseRefUsers;
     private ProgressDialog progress;
-
     private GoogleApiClient googleApiClient;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
         auth = FirebaseAuth.getInstance();
-
         databaseRefUsers = FirebaseDatabase.getInstance().getReference().child("Users");
         databaseRefUsers.keepSynced(true);
-
         progress = new ProgressDialog(this);
-
+        
         loginEmailField = (EditText) findViewById(R.id.loginEmailField);
         loginPasswordField = (EditText) findViewById(R.id.loginPasswordField);
-
         loginBtn = (Button) findViewById(R.id.loginBtn);
         registerBtn = (Button) findViewById(R.id.registerBtn);
         googleBtn = (SignInButton) findViewById(R.id.googleBtn);
